@@ -9,7 +9,7 @@ class GroqClient:
         if not self.api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
         self.base_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "llama3-8b-8192"
+        #self.model = "llama3-8b-8192"
     
     def generate(self, prompt):
         try:
@@ -20,18 +20,26 @@ class GroqClient:
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": self.model,
+                    "model": "llama3-8b-8192",
                     "messages": [
                         {"role": "user", "content": prompt}
-                    ]
+                    ],
+                    "temperature": 0.7
                 },
-                timeout=200
+                timeout=120
             )
-            print(res.text)
             
-            res.raise_for_status()
-            return res.json()["choices"][0]["message"]["content"]
+            
+            if res.status_code != 200:
+                return f"Groq Error: {res.status_code} - {res.text}"
 
+            data = res.json()
+
+            if "choices" not in data:
+                return f"Invalid response: {data}"
+
+            return data["choices"][0]["message"]["content"]
+            
         except requests.exceptions.RequestException as e:
             return f"LLM API error: {str(e)}"
         except (KeyError, IndexError) as e:
