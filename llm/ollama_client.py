@@ -25,7 +25,7 @@ class GroqClient:
                         {"role": "user", "content": prompt}
                     ]
                 },
-                timeout=20
+                timeout=200
             )
             print(res.text)
             
