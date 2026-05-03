@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from llm.ollama_client import WatsonxClient
 from ibm.bob_client import BobClient
+from ibm.bob_api_client import BobAPIClient
 
 from agents.planner_agent import PlannerAgent
 from agents.retrieval_agent import RetrievalAgent
@@ -13,10 +14,12 @@ from agents.critic_agent import CriticAgent
 from agents.strategy_agent import StrategyAgent
 from agents.explanation_agent import ExplanationAgent
 from agents.insight_agent import InsightAgent
+from agents.bob_orchestrator_agent import BobOrchestratorAgent
 from orchestration.workflow import Workflow
 from ui.streamlit_app import run_app
 from event_bus.producer import EventProducer
 from utils.service_checker import ServiceChecker
+from app.config import Config
 
 # Validate services before starting
 print("=" * 60)
@@ -42,6 +45,16 @@ except ValueError as e:
 bob = BobClient()
 event_bus = EventProducer()
 
+# Initialize Bob AI API client if enabled
+bob_api = None
+if Config.BOB_ENABLED:
+    try:
+        bob_api = BobAPIClient()
+        print("✓ Bob AI Assistant API initialized successfully")
+    except Exception as e:
+        print(f"⚠️ Bob AI API initialization failed: {e}")
+        print("  Continuing with standard agents only")
+
 # Initialize agents
 print("Initializing agents...")
 agents = {
@@ -54,6 +67,12 @@ agents = {
     "explanation": ExplanationAgent("explanation", llm, bob, event_bus),
     "insight": InsightAgent("insight", llm, bob, event_bus),
 }
+
+# Add Bob Orchestrator agent if Bob API is available
+if bob_api and Config.BOB_ENABLED:
+    agents["bob_orchestrator"] = BobOrchestratorAgent("bob_orchestrator", llm, bob, event_bus)
+    print("✓ Bob Orchestrator agent added")
+
 print(f"✓ {len(agents)} agents initialized")
 
 bob.logs = []
