@@ -1,6 +1,6 @@
 # Aedis AI
 
-Autonomous Decision Intelligence System using Multi-Agent Architecture.
+Autonomous Enterprise Decision Intelligence System using Multi-Agent Architecture.
 
 ## Overview
 
@@ -195,8 +195,9 @@ echo $GROQ_API_KEY
 
 ## License
 
-[Add your license here]
+Manish Rathi
+EX-IBMER
 
 ## Contributing
 
-[Add contribution guidelines here]
+IBM Bob Hackathon
