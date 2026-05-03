@@ -8,3 +8,4 @@ sentence-transformers
 requests
 networkx
 ibm-watsonx-ai>=0.2.0
+python-dotenv
