@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 def show_header():
-    st.title("🧠 Aegis AI")
+    st.title("🧠 Aedis AI")
 
 def show_logs(logs):
     for log in logs:
