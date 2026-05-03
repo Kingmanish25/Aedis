@@ -1,113 +1,87 @@
-import requests
 import os
-import time
+from ibm_watsonx_ai.foundation_models import Model
 
 
-class GroqClient:
-    """Multi-LLM Client: Groq (primary) + Together AI (fallback)"""
+class WatsonxClient:
+    """
+    Enterprise LLM Client using IBM watsonx.ai
+    """
 
     def __init__(self):
-        # API Keys
-        self.groq_api_key = os.getenv("GROQ_API_KEY")
-        self.together_api_key = os.getenv("TOGETHER_API_KEY")
+        # Environment variables
+        self.api_key = os.getenv("IBM_API_KEY")
+        self.project_id = os.getenv("IBM_PROJECT_ID")
+        self.url = os.getenv("IBM_URL", "https://us-south.ml.cloud.ibm.com")
 
-        if not self.groq_api_key and not self.together_api_key:
-            raise ValueError("❌ At least one API key (GROQ or TOGETHER) must be set")
+        if not self.api_key or not self.project_id:
+            raise ValueError("❌ IBM_API_KEY and IBM_PROJECT_ID must be set")
 
-        # Endpoints
-        self.groq_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.together_url = "https://api.together.xyz/v1/chat/completions"
+        # Model (best default)
+        self.model_id = "ibm/granite-13b-chat-v2"
 
-        # Models
-        self.groq_model = "llama3-8b-8192"
-        self.together_model = "meta-llama/Llama-3-8b-chat-hf"
-
-    def generate(self, prompt):
-        """Smart routing: Groq → Together → Fallback"""
-
-        # 1️⃣ Try Groq first
-        if self.groq_api_key:
-            try:
-                return self._call_groq(prompt)
-            except Exception as e:
-                print("⚠️ Groq failed:", e)
-
-        # 2️⃣ Fallback to Together AI
-        if self.together_api_key:
-            try:
-                return self._call_together(prompt)
-            except Exception as e:
-                print("⚠️ Together AI failed:", e)
-
-        # 3️⃣ Final fallback (never crash)
-        return self._fallback("All LLM providers failed")
-
-    # ---------------- GROQ ----------------
-    def _call_groq(self, prompt):
-        res = requests.post(
-            self.groq_url,
-            headers={
-                "Authorization": f"Bearer {self.groq_api_key}",
-                "Content-Type": "application/json"
+        # Initialize model
+        self.model = Model(
+            model_id=self.model_id,
+            params={
+                "decoding_method": "greedy",
+                "max_new_tokens": 300,
+                "temperature": 0.5
             },
-            json={
-                "model": self.groq_model,
-                "messages": [
-                    
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.7
+            credentials={
+                "apikey": self.api_key,
+                "url": self.url
             },
-            timeout=30
+            project_id=self.project_id
         )
 
-        if res.status_code != 200:
-            raise Exception(f"Groq Error {res.status_code}: {res.text}")
+    def generate(self, prompt: str):
+        """
+        Generate response using watsonx
+        """
 
-        data = res.json()
+        try:
+            response = self.model.generate_text(prompt)
 
-        if "choices" not in data or not data["choices"]:
-            raise Exception(f"Invalid Groq response: {data}")
+            if not response:
+                raise ValueError("Empty response from IBM")
 
-        return data["choices"][0]["message"]["content"]
+            return response
 
-    # ---------------- TOGETHER AI ----------------
-    def _call_together(self, prompt):
-        res = requests.post(
-            self.together_url,
-            headers={
-                "Authorization": f"Bearer {self.together_api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": self.together_model,
-                "messages": [
-                    {"role": "system", "content": "You are a fraud detection AI. Respond clearly."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.7,
-                "max_tokens": 512
-            },
-            timeout=30
-        )
+        except Exception as e:
+            return self._fallback(str(e))
 
-        if res.status_code != 200:
-            raise Exception(f"Together Error {res.status_code}: {res.text}")
+    def generate_structured(self, txn, risk):
+        """
+        AEIDS-specific structured output (fraud use case)
+        """
 
-        data = res.json()
+        prompt = f"""
+        You are an enterprise fraud detection AI.
 
-        if "choices" not in data or not data["choices"]:
-            raise Exception(f"Invalid Together response: {data}")
+        Transaction:
+        {txn}
 
-        return data["choices"][0]["message"]["content"]
+        Risk Score: {risk}
 
-    # ---------------- FALLBACK ----------------
+        Return ONLY valid JSON:
+        {{
+            "decision": "approve/block/review",
+            "confidence": 0-1,
+            "reason": "short explanation"
+        }}
+        """
+
+        return self.generate(prompt)
+
     def _fallback(self, error):
-        print("⚠️ FINAL FALLBACK:", error)
+        """
+        Safe fallback (never crash system)
+        """
+        print("⚠️ Watsonx Error:", error)
 
         return {
             "status": "fallback",
             "decision": "review",
             "confidence": 0.5,
-            "reason": "LLM unavailable, using safe fallback"
+            "reason": "Watsonx unavailable, safe fallback triggered"
         }
