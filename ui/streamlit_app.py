@@ -44,8 +44,24 @@ def run_app(workflow, bob, event_bus):
             return
 
         with st.spinner("Running AEDIS pipeline..."):
-            result = workflow.run(query)
-            st.session_state.result = result
+            try:
+                result = workflow.run(query)
+                st.session_state.result = result
+                
+                # Check for errors in result
+                if result.get("critical_error"):
+                    st.error(f"Critical Error: {result['critical_error']}")
+                elif result.get("error"):
+                    st.warning(f"Warning: {result['error']}")
+                else:
+                    st.success("Analysis completed successfully!")
+                    
+            except Exception as e:
+                st.error(f"Workflow execution failed: {str(e)}")
+                import traceback
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
+                return
 
     result = st.session_state.result
 
@@ -115,13 +131,17 @@ def run_app(workflow, bob, event_bus):
 
             st.line_chart(df["revenue"])
 
-            # Safe plot
+            # Safe plot with proper error handling
             try:
-                plt.figure()
-                plt.plot(df["revenue"])
-                st.pyplot(plt)
+                fig, ax = plt.subplots()
+                ax.plot(df["revenue"])
+                ax.set_title("Revenue Trend")
+                ax.set_xlabel("Index")
+                ax.set_ylabel("Revenue")
+                st.pyplot(fig)
+                plt.close(fig)  # Clean up
             except Exception as e:
-                st.write("Plot error:", e)
+                st.write(f"Plot error: {str(e)}")
 
         else:
             st.write("No data available")
