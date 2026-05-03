@@ -6,5 +6,4 @@ scikit-learn
 faiss-cpu
 sentence-transformers
 requests
-sqlite-utils
 networkx
