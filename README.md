@@ -4,7 +4,7 @@ Autonomous Enterprise Decision Intelligence System using Multi-Agent Architectur
 
 ## Overview
 
-Aedis AI is a sophisticated multi-agent system designed for autonomous decision-making in financial analysis. It uses a workflow-based architecture with specialized agents that collaborate to analyze data, generate insights, and recommend actions.
+Aedis AI is a sophisticated multi-agent system designed for autonomous decision-making in financial analysis. It uses a workflow-based architecture with specialized agents that collaborate to analyze data, generate insights, and recommend actions. Powered by IBM WatsonX AI for enterprise-grade language model capabilities.
 
 ## Architecture
 
@@ -32,7 +32,8 @@ Aedis AI is a sophisticated multi-agent system designed for autonomous decision-
 ### Prerequisites
 
 - Python 3.8+
-- Groq API account (for LLM access)
+- IBM WatsonX account (for LLM access)
+- IBM Cloud API Key and Project ID
 
 ### Installation
 
@@ -51,10 +52,18 @@ Aedis AI is a sophisticated multi-agent system designed for autonomous decision-
    
    Create a `.env` file or set environment variables:
    ```bash
-   export GROQ_API_KEY="your_groq_api_key_here"
+   export IBM_API_KEY="your_ibm_api_key_here"
+   export IBM_PROJECT_ID="your_project_id_here"
+   export IBM_URL="https://us-south.ml.cloud.ibm.com"
    ```
    
    **Important**: Never commit API keys to version control!
+   
+   To get your IBM WatsonX credentials:
+   - Sign up at [IBM Cloud](https://cloud.ibm.com/)
+   - Create a WatsonX project
+   - Generate an API key from IAM
+   - Copy your Project ID from the project settings
 
 4. **Generate sample database**
    ```bash
@@ -126,8 +135,8 @@ Aedis/
 ├── decision/            # Decision engine and scoring
 ├── event_bus/           # Event-driven communication
 ├── execution/           # Action execution layer
-├── ibm/                 # IBM integration (placeholder)
-├── llm/                 # LLM client (Groq API)
+├── ibm/                 # IBM Bob logging integration
+├── llm/                 # LLM client (IBM WatsonX)
 ├── memory/              # Knowledge graph and memory management
 ├── orchestration/       # Workflow and state management
 ├── tools/               # Utility tools for agents
@@ -174,15 +183,24 @@ python data/generate_data.py
 
 ### API Connection Issues
 
-Verify your API key:
+Verify your IBM WatsonX credentials:
 ```bash
-echo $GROQ_API_KEY
+echo $IBM_API_KEY
+echo $IBM_PROJECT_ID
+echo $IBM_URL
 ```
+
+If you get authentication errors:
+1. Verify your API key is valid in IBM Cloud Console
+2. Ensure your project ID is correct
+3. Check that your WatsonX service is active
+4. Verify you have sufficient credits/quota
 
 ## Recent Improvements
 
+- ✅ **Migrated to IBM WatsonX AI** - Enterprise-grade LLM with better reliability
 - ✅ Fixed hardcoded API key security vulnerability
-- ✅ Renamed OllamaClient to GroqClient for clarity
+- ✅ Updated all service validation for WatsonX
 - ✅ Fixed datetime import bug in memory manager
 - ✅ Improved reasoning controller logic
 - ✅ Added comprehensive error handling to workflow
@@ -192,6 +210,7 @@ echo $GROQ_API_KEY
 - ✅ Added service availability checks
 - ✅ Implemented state validation schema
 - ✅ Added agent dependency management
+- ✅ Complete documentation update for WatsonX integration
 
 ## License
 

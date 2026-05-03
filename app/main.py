@@ -2,7 +2,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from llm.ollama_client import GroqClient
+from llm.ollama_client import WatsonxClient
 from ibm.bob_client import BobClient
 
 from agents.planner_agent import PlannerAgent
@@ -32,11 +32,11 @@ except SystemExit:
 
 # Initialize LLM client with error handling
 try:
-    llm = GroqClient()
+    llm = WatsonxClient()
     print("✓ LLM client initialized successfully")
 except ValueError as e:
     print(f"✗ Error initializing LLM client: {e}")
-    print("Please set GROQ_API_KEY environment variable")
+    print("Please set IBM_API_KEY and IBM_PROJECT_ID environment variables")
     sys.exit(1)
 
 bob = BobClient()

@@ -11,47 +11,57 @@ class ServiceChecker:
     """Check availability of required services"""
     
     @staticmethod
-    def check_groq_api() -> Tuple[bool, str]:
+    def check_watsonx_api() -> Tuple[bool, str]:
         """
-        Check if Groq API is accessible and API key is configured.
+        Check if IBM WatsonX API is accessible and credentials are configured.
         
         Returns:
             (is_available, message)
         """
-        api_key = os.getenv('GROQ_API_KEY')
+        api_key = os.getenv('IBM_API_KEY')
+        project_id = os.getenv('IBM_PROJECT_ID')
         
         if not api_key:
-            return False, "GROQ_API_KEY environment variable is not set"
+            return False, "IBM_API_KEY environment variable is not set"
+        
+        if not project_id:
+            return False, "IBM_PROJECT_ID environment variable is not set"
         
         try:
-            # Test API with a minimal request
-            response = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
+            # Import WatsonX SDK
+            from ibm_watsonx_ai.foundation_models import Model
+            
+            # Test API with minimal request
+            model = Model(
+                model_id="ibm/granite-13b-chat-v2",
+                params={
+                    "decoding_method": "greedy",
+                    "max_new_tokens": 5,
+                    "temperature": 0.5
                 },
-                json={
-                    "model": "llama3-8b-8192",
-                    "messages": [{"role": "user", "content": "test"}],
-                    "max_tokens": 5
+                credentials={
+                    "apikey": api_key,
+                    "url": os.getenv("IBM_URL", "https://us-south.ml.cloud.ibm.com")
                 },
-                timeout=10
+                project_id=project_id
             )
             
-            if response.status_code == 200:
-                return True, "Groq API is accessible"
-            elif response.status_code == 401:
-                return False, "Groq API key is invalid"
+            # Try a minimal generation
+            response = model.generate_text("test")
+            
+            if response:
+                return True, "WatsonX API is accessible"
             else:
-                return False, f"Groq API returned status code {response.status_code}"
+                return False, "WatsonX API returned empty response"
                 
-        except requests.exceptions.Timeout:
-            return False, "Groq API request timed out"
-        except requests.exceptions.ConnectionError:
-            return False, "Cannot connect to Groq API - check internet connection"
+        except ImportError:
+            return False, "ibm-watsonx-ai package not installed. Run: pip install ibm-watsonx-ai"
         except Exception as e:
-            return False, f"Groq API check failed: {str(e)}"
+            error_msg = str(e)
+            # Mask sensitive information in error messages
+            if api_key and api_key in error_msg:
+                error_msg = error_msg.replace(api_key, "***")
+            return False, f"WatsonX API check failed: {error_msg}"
     
     @staticmethod
     def check_database(db_path: str) -> Tuple[bool, str]:
@@ -122,7 +132,7 @@ class ServiceChecker:
         from app.config import Config
         
         results = {
-            "groq_api": ServiceChecker.check_groq_api(),
+            "watsonx_api": ServiceChecker.check_watsonx_api(),
             "database": ServiceChecker.check_database(Config.DB_PATH),
             "documents": ServiceChecker.check_documents_directory("data/documents")
         }
