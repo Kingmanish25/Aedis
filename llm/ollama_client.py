@@ -53,7 +53,7 @@ class GroqClient:
             json={
                 "model": self.groq_model,
                 "messages": [
-                    {"role": "system", "content": "You are a fraud detection AI. Respond clearly."},
+                    
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.7
