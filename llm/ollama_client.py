@@ -27,6 +27,7 @@ class GroqClient:
                 },
                 timeout=20
             )
+            print(res.text)
             
             res.raise_for_status()
             return res.json()["choices"][0]["message"]["content"]
