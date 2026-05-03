@@ -19,8 +19,8 @@ def run_app(workflow, bob, event_bus):
     st.set_page_config(layout="wide")
 
     st.markdown("""
-    <h1 style='text-align: center;'>🧠 Aegis AI</h1>
-    <h4 style='text-align: center;'>Autonomous Decision Intelligence System</h4>
+    <h1 style='text-align: center;'>🧠 Aedis AI</h1>
+    <h4 style='text-align: center;'>Autonomous Enterprise Decision Intelligence System</h4>
     """, unsafe_allow_html=True)
 
     # ✅ STATE INIT
