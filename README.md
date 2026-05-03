@@ -1,4 +1,4 @@
-# Aegis AI
+# Aedis AI
 
 Autonomous Decision Intelligence System using Multi-Agent Architecture.
 
